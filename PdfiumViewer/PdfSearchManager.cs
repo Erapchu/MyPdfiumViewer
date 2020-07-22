@@ -12,7 +12,7 @@ namespace PdfiumViewer
     {
         private bool _highlightAllMatches;
         private PdfMatches _matches;
-        private List<IList<PdfRectangle>> _bounds;
+        private List<HighlightedBounds> _highlightedBounds;
         private int _firstMatch;
         private int _offset;
 
@@ -105,13 +105,13 @@ namespace PdfiumViewer
             if (String.IsNullOrEmpty(text))
             {
                 _matches = null;
-                _bounds = null;
+                _highlightedBounds = null;
             }
             else
             {
                 var splittedParts = text.Split();
                 _matches = Renderer.Document.Search(splittedParts, MatchCase, MatchWholeWord);
-                _bounds = GetAllBounds();
+                _highlightedBounds = GetAllBounds();
             }
 
             _offset = -1;
@@ -121,13 +121,13 @@ namespace PdfiumViewer
             return _matches != null && _matches.Items.Count > 0;
         }
 
-        private List<IList<PdfRectangle>> GetAllBounds()
+        private List<HighlightedBounds> GetAllBounds()
         {
-            var result = new List<IList<PdfRectangle>>();
+            var result = new List<HighlightedBounds>();
 
             foreach (var match in _matches.Items)
             {
-                result.Add(Renderer.Document.GetTextBounds(match.TextSpan));
+                result.Add(new HighlightedBounds(Renderer.Document.GetTextBounds(match.TextSpan), match.Text));
             }
 
             return result;
@@ -175,9 +175,9 @@ namespace PdfiumViewer
 
         private void ScrollCurrentIntoView()
         {
-            var current = _bounds[_offset];
-            if (current.Count > 0)
-                Renderer.ScrollIntoView(current[0]);
+            var current = _highlightedBounds[_offset];
+            if (current.Bounds.Count > 0)
+                Renderer.ScrollIntoView(current.Bounds[0]);
         }
 
         private int FindFirstFromCurrentPage()
@@ -227,7 +227,9 @@ namespace PdfiumViewer
 
         private void AddMatch(int index, bool current)
         {
-            foreach (var pdfBounds in _bounds[index])
+            var requestedHighlightBound = _highlightedBounds[index];
+
+            foreach (var pdfBounds in requestedHighlightBound.Bounds)
             {
                 var bounds = new RectangleF(
                     pdfBounds.Bounds.Left - 1,

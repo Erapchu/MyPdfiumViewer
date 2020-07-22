@@ -49,6 +49,7 @@
     <Compile Include="CustomScrollControl.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="HighlightedBounds.cs" />
     <Compile Include="HitTest.cs" />
     <Compile Include="IPdfDocument.cs" />
     <Compile Include="IPdfMarker.cs" />
